@@ -29,7 +29,7 @@ export function AudioFileUpload() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map())
+  // const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map())
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -69,32 +69,32 @@ export function AudioFileUpload() {
     const validFiles = validateFiles(fileList)
 
     if (validFiles.length > 0) {
-        const file = validFiles[0]
-        const id = Math.random().toString(36).substring(2, 9)
-        const url = URL.createObjectURL(file)
-        
-        setFiles((prev) => {
-          prev.forEach(f => {
-            if (f.url) {
-              URL.revokeObjectURL(f.url)
-            }
-          })
-          return []
+      const file = validFiles[0]
+      const id = Math.random().toString(36).substring(2, 9)
+      const url = URL.createObjectURL(file)
+
+      setFiles((prev) => {
+        prev.forEach(f => {
+          if (f.url) {
+            URL.revokeObjectURL(f.url)
+          }
         })
-        
-        setFiles([
-          {
-            file,
-            id,
-            progress: 0,
-            url,
-            status: "idle",
-          },
-        ])
-        
-        uploadFile(file, id)
-      }
+        return []
+      })
+
+      setFiles([
+        {
+          file,
+          id,
+          progress: 0,
+          url,
+          status: "idle",
+        },
+      ])
+
+      uploadFile(file, id)
     }
+  }
 
   const uploadFile = async (file: File, id: string) => {
     try {
@@ -112,13 +112,18 @@ export function AudioFileUpload() {
             return f
           }),
         )
-      }, 300) 
+      }, 300)
 
-      const response = await fetch("https://saving-condor-75.rshare.io/api/demucs/separate", {
+
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/demucs/separate`, {
         method: 'POST',
         body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload file")
       }
-      )
 
       // await new Promise((resolve) => setTimeout(resolve, 3000))
 
@@ -246,29 +251,29 @@ export function AudioFileUpload() {
     return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
-  const drawWaveform = (canvas: HTMLCanvasElement, waveform: number[], color: string) => {
-    if (!canvas) return
+  // const drawWaveform = (canvas: HTMLCanvasElement, waveform: number[], color: string) => {
+  //   if (!canvas) return
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+  //   const ctx = canvas.getContext("2d")
+  //   if (!ctx) return
 
-    const { width, height } = canvas
-    ctx.clearRect(0, 0, width, height)
+  //   const { width, height } = canvas
+  //   ctx.clearRect(0, 0, width, height)
 
-    const barWidth = width / waveform.length
-    const barGap = 1
-    const effectiveBarWidth = barWidth - barGap
+  //   const barWidth = width / waveform.length
+  //   const barGap = 1
+  //   const effectiveBarWidth = barWidth - barGap
 
-    ctx.fillStyle = color
+  //   ctx.fillStyle = color
 
-    waveform.forEach((amplitude, i) => {
-      const barHeight = amplitude * height * 0.8
-      const x = i * barWidth
-      const y = (height - barHeight) / 2
+  //   waveform.forEach((amplitude, i) => {
+  //     const barHeight = amplitude * height * 0.8
+  //     const x = i * barWidth
+  //     const y = (height - barHeight) / 2
 
-      ctx.fillRect(x, y, effectiveBarWidth, barHeight)
-    })
-  }
+  //     ctx.fillRect(x, y, effectiveBarWidth, barHeight)
+  //   })
+  // }
 
   useEffect(() => {
     // Set up audio element
