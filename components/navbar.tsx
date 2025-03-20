@@ -17,7 +17,7 @@ export function Navbar() {
         {/* Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <Image src="/Samplify.png" alt="Logo" width={200} height={200} />
+            <Image src="/Samplify_dark.png" alt="Logo" width={200} height={200} />
           </Link>
         </div>
 
@@ -27,7 +27,7 @@ export function Navbar() {
             <Link href="/" className="text-sm font-medium text-white "> HOME </Link>
           </Button>
           <Button asChild size="sm" className="bg-black">
-            <Link href="/create" className="text-sm font-medium text-samplify-blue"> CREATE </Link> 
+            <Link href="/create" className="text-sm font-medium text-samplify-blue"> CREATE </Link>
           </Button>
           <Button asChild size="sm" className="bg-black">
             <Link href="/login" className= "text-sm font-medium text-white"> LOGIN </Link>
