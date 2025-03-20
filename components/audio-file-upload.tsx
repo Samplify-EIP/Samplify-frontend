@@ -12,7 +12,6 @@ type AudioFile = {
   id: string
   progress: number
   url?: string
-  waveform?: number[]
   status: "idle" | "uploading" | "uploaded" | "error"
 }
 
@@ -29,7 +28,7 @@ export function AudioFileUpload() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
-  // const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map())
+  const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map())
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -74,7 +73,7 @@ export function AudioFileUpload() {
       const url = URL.createObjectURL(file)
 
       setFiles((prev) => {
-        prev.forEach(f => {
+        prev.forEach((f) => {
           if (f.url) {
             URL.revokeObjectURL(f.url)
           }
@@ -103,37 +102,130 @@ export function AudioFileUpload() {
       const formData = new FormData()
       formData.append("audio_file", file)
 
-      const progressInterval = setInterval(() => {
-        setFiles((prev) =>
-          prev.map((f) => {
-            if (f.id === id && f.progress < 90) {
-              return { ...f, progress: f.progress + 10 }
-            }
-            return f
-          }),
-        )
-      }, 300)
-
-
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/demucs/separate`, {
-        method: 'POST',
-        body: formData
+      const response = await fetch("https://f385-91-173-101-151.ngrok-free.app/api/demucs/separate", {
+        method: "POST",
+        body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to upload file")
+      if (response.status === 200) {
+        const data = await response.json()
+        const taskId = data["task_id"]
+        extractDrums(taskId)
+        extractVocals(taskId)
+        extractBass(taskId)
+        extractOther(taskId)
       }
-
-      // await new Promise((resolve) => setTimeout(resolve, 3000))
-
-      clearInterval(progressInterval)
-
-      // Update file status to uploaded
-      setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, progress: 100, status: "uploaded" } : f)))
     } catch (error) {
       console.error("Error uploading file:", error)
       setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, status: "error" } : f)))
+    }
+  }
+
+  const extractDrums = async (taskId: string) => {
+    const responseDrums = await fetch(
+      `https://f385-91-173-101-151.ngrok-free.app/api/demucs/download/${taskId}/drums.wav`,
+      {
+        method: "GET",
+        headers: {
+          "ngrok-skip-browser-warning": "69420",
+        },
+      },
+    )
+    if (responseDrums.status == 200) {
+      const drumsBlob = await responseDrums.blob()
+      const drumsUrl = URL.createObjectURL(drumsBlob)
+      const drumsId = Math.random().toString(36).substring(2, 9)
+      setFiles((prev) => [
+        ...prev,
+        {
+          file: new File([drumsBlob], "drums.wav", { type: "audio/wav" }),
+          id: drumsId,
+          progress: 100,
+          url: drumsUrl,
+          status: "uploaded",
+        },
+      ])
+    }
+  }
+
+  const extractVocals = async (taskId: string) =>  {
+    const responseVocals = await fetch(
+      `https://f385-91-173-101-151.ngrok-free.app/api/demucs/download/${taskId}/vocals.wav`,
+      {
+        method: "GET",
+        headers: {
+          "ngrok-skip-browser-warning": "69420",
+        },
+      },
+    )
+    if (responseVocals.status == 200) {
+      const vocalsBlob = await responseVocals.blob()
+      const vocalsUrl = URL.createObjectURL(vocalsBlob)
+      const vocalsId = Math.random().toString(36).substring(2, 9)
+      setFiles((prev) => [
+        ...prev,
+        {
+          file: new File([vocalsBlob], "vocals.wav", { type: "audio/wav" }),
+          id: vocalsId,
+          progress: 100,
+          url: vocalsUrl,
+          status: "uploaded",
+        },
+      ])
+    }
+  }
+
+  const extractBass = async (taskId: string) =>  {
+    const responseBass = await fetch(
+      `https://f385-91-173-101-151.ngrok-free.app/api/demucs/download/${taskId}/bass.wav`,
+      {
+        method: "GET",
+        headers: {
+          "ngrok-skip-browser-warning": "69420",
+        },
+      },
+    )
+    if (responseBass.status == 200) {
+      const bassBlob = await responseBass.blob()
+      const bassUrl = URL.createObjectURL(bassBlob)
+      const bassId = Math.random().toString(36).substring(2, 9)
+      setFiles((prev) => [
+        ...prev,
+        {
+          file: new File([bassBlob], "bass.wav", { type: "audio/wav" }),
+          id: bassId,
+          progress: 100,
+          url: bassUrl,
+          status: "uploaded",
+        },
+      ])
+    }
+  }
+
+  const extractOther = async (taskId: string) =>  {
+    const responseOther = await fetch(
+      `https://f385-91-173-101-151.ngrok-free.app/api/demucs/download/${taskId}/other.wav`,
+      {
+        method: "GET",
+        headers: {
+          "ngrok-skip-browser-warning": "69420",
+        },
+      },
+    )
+    if (responseOther.status == 200) {
+      const otherBlob = await responseOther.blob()
+      const otherUrl = URL.createObjectURL(otherBlob)
+      const otherId = Math.random().toString(36).substring(2, 9)
+      setFiles((prev) => [
+        ...prev,
+        {
+          file: new File([otherBlob], "bass.wav", { type: "audio/wav" }),
+          id: otherId,
+          progress: 100,
+          url: otherUrl,
+          status: "uploaded",
+        },
+      ])
     }
   }
 
@@ -251,32 +343,7 @@ export function AudioFileUpload() {
     return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
-  // const drawWaveform = (canvas: HTMLCanvasElement, waveform: number[], color: string) => {
-  //   if (!canvas) return
-
-  //   const ctx = canvas.getContext("2d")
-  //   if (!ctx) return
-
-  //   const { width, height } = canvas
-  //   ctx.clearRect(0, 0, width, height)
-
-  //   const barWidth = width / waveform.length
-  //   const barGap = 1
-  //   const effectiveBarWidth = barWidth - barGap
-
-  //   ctx.fillStyle = color
-
-  //   waveform.forEach((amplitude, i) => {
-  //     const barHeight = amplitude * height * 0.8
-  //     const x = i * barWidth
-  //     const y = (height - barHeight) / 2
-
-  //     ctx.fillRect(x, y, effectiveBarWidth, barHeight)
-  //   })
-  // }
-
   useEffect(() => {
-    // Set up audio element
     if (audioRef.current) {
       audioRef.current.volume = volume
 
@@ -292,7 +359,6 @@ export function AudioFileUpload() {
         audioRef.current.removeEventListener("timeupdate", handleTimeUpdate)
       }
 
-      // Clean up object URLs
       files.forEach((file) => {
         if (file.url) {
           URL.revokeObjectURL(file.url)
@@ -390,6 +456,24 @@ export function AudioFileUpload() {
                     ) : file.status === "error" ? (
                       <span className="text-xs text-red-500">Erreur</span>
                     ) : null}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (file.url) {
+                          const a = document.createElement("a")
+                          a.href = file.url
+                          a.download = file.file.name
+                          document.body.appendChild(a)
+                          a.click()
+                          document.body.removeChild(a)
+                        }
+                      }}
+                      className="h-8 text-xs text-gray-400 hover:text-white"
+                    >
+                      Download
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
