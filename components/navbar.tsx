@@ -22,7 +22,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center space-x-4 md:flex">
+        <div className="items-center space-x-4 md:flex">
           <Button asChild size="sm" className="bg-black">
             <Link href="/" className="text-sm font-medium text-white "> HOME </Link>
           </Button>
