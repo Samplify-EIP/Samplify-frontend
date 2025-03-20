@@ -1,6 +1,5 @@
 'use client'
 
-import { Navbar } from "../../components/navbar";
 import { AudioFileUpload } from "../../components/audio-file-upload";
 
 export default function Page() {
